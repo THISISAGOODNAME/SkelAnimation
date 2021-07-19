@@ -22,5 +22,12 @@ include_directories(
 # LIBs
 set(COMMON_LIBS glfw ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 
+# Assets & Shaders
+add_custom_target(copy-runtime-files ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Assets ${CMAKE_BINARY_DIR}/Assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Shaders ${CMAKE_BINARY_DIR}/Shaders
+        )
+
 add_executable(SkelAnimation main.cpp ${GLAD_FILES})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
+add_dependencies(SkelAnimation copy-runtime-files)
