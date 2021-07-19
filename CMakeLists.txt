@@ -28,6 +28,6 @@ add_custom_target(copy-runtime-files ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Shaders ${CMAKE_BINARY_DIR}/Shaders
         )
 
-add_executable(SkelAnimation main.cpp ${GLAD_FILES})
+add_executable(SkelAnimation src/main.cpp ${GLAD_FILES})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
 add_dependencies(SkelAnimation copy-runtime-files)
