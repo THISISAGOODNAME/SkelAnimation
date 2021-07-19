@@ -24,6 +24,3 @@ set(COMMON_LIBS glfw ${GLFW_LIBRARIES} ${GLAD_LIBRARIES})
 
 add_executable(SkelAnimation main.cpp ${GLAD_FILES})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
-
-add_executable(NuklearDemo NuklearDemo.cpp ${GLAD_FILES})
-target_link_libraries(NuklearDemo ${COMMON_LIBS})
