@@ -1,4 +1,5 @@
-#include <glad/glad.h>
+#include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
@@ -99,7 +100,7 @@ int main() {
     glfwMakeContextCurrent(window);
 
     // Load OpenGL Functions
-    if (!gladLoadGL() ) {
+    if (!gladLoadGL(glfwGetProcAddress) ) {
         std::cout << "Could not initialize GLAD\n";
         return EXIT_FAILURE;
     }
@@ -154,26 +155,30 @@ int main() {
         }
 
 
-        vertexCode = "#version 330 core\n"
-                     "\n"
-                     "layout (location = 0) in vec3 position;\n"
-                     "layout (location = 1) in vec3 color;\n"
-                     "\n"
-                     "out vec3 ourColor;\n"
-                     "\n"
-                     "void main() {\n"
-                     "    gl_Position = vec4(position, 1.0f);\n"
-                     "    ourColor = color;\n"
-                     "}";
-        fragmentCode = "#version 330 core\n"
-                       "\n"
-                       "in vec3 ourColor;\n"
-                       "\n"
-                       "out vec4 color;\n"
-                       "\n"
-                       "void main() {\n"
-                       "    color = vec4(ourColor, 1.0f);\n"
-                       "}";
+        vertexCode = R"(
+#version 330 core
+
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 color;
+
+out vec3 ourColor;
+
+void main() {
+    gl_Position = vec4(position, 1.0f);
+    ourColor = color;
+}
+)";
+        fragmentCode = R"(
+#version 330 core
+
+in vec3 ourColor;
+
+out vec4 color;
+
+void main() {
+    color = vec4(ourColor, 1.0f);
+}
+)";
 
 
         const GLchar* vShaderCode = vertexCode.c_str();

@@ -9,8 +9,8 @@ option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
 add_subdirectory(3rd_party/glfw)
 
-# glad.c
-set(GLAD_FILES 3rd_party/glad/src/glad.c)
+# glad
+set(GLAD_FILES 3rd_party/glad/src/gl.c)
 
 # INCLUDE
 include_directories(
