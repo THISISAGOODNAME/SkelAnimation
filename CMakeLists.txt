@@ -40,6 +40,9 @@ file(GLOB RHI_SRC src/RHI/*.cpp src/RHI/*/*/*.cpp)
 ## Misc
 file(GLOB MISC_SRC src/Misc/*.cpp)
 
-add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC} ${RHI_SRC} ${MISC_SRC})
+## Samples
+file(GLOB SAMPLES_SRC src/Samples/*.cpp)
+
+add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC} ${RHI_SRC} ${MISC_SRC} ${SAMPLES_SRC})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
 add_dependencies(SkelAnimation copy-runtime-files)

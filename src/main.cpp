@@ -1,16 +1,14 @@
+#define _CRT_SECURE_NO_WARNINGS
+#define WIN32_LEAN_AND_MEAN
+#define WIN32_EXTRA_LEAN
+#include <windows.h>
+
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-#include <limits.h>
-#include <time.h>
+#include "Samples/Application.h"
+#include "Samples/SampleSelector.h"
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -25,62 +23,49 @@
 #include "nuklear.h"
 #include "demo/glfw_opengl4/nuklear_glfw_gl4.h"
 
-#define WINDOW_WIDTH 1200
-#define WINDOW_HEIGHT 800
-
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
-
-/* ===============================================================
- *
- *                          EXAMPLE
- *
- * ===============================================================*/
-/* This are some code examples to provide a small overview of what can be
- * done with this library. To try out an example uncomment the defines */
-#define INCLUDE_ALL
-/*#define INCLUDE_STYLE */
-/*#define INCLUDE_CALCULATOR */
-//#define INCLUDE_OVERVIEW
-/*#define INCLUDE_NODE_EDITOR */
-
-#ifdef INCLUDE_ALL
-#define INCLUDE_STYLE
-#define INCLUDE_CALCULATOR
-#define INCLUDE_OVERVIEW
-#define INCLUDE_NODE_EDITOR
-#endif
-
-#ifdef INCLUDE_STYLE
-#include "demo/style.c"
-#endif
-#ifdef INCLUDE_CALCULATOR
-#include "demo/calculator.c"
-#endif
-#ifdef INCLUDE_OVERVIEW
-#include "demo/overview.c"
-#endif
-#ifdef INCLUDE_NODE_EDITOR
-#include "demo/node_editor.c"
-#endif
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
 
+// CPU Frame Timers
+struct FrameTimer {
+    // High level timers
+    double frameTime = 0.0;
+    float  deltaTime = 0.0f;
+    // CPU timers
+    double frameUpdate = 0.0;
+    double frameRender = 0.0;
+    double win32Events = 0.0;
+    double imguiLogic = 0.0;
+    double imguiRender = 0.0;
+    double swapBuffer = 0.0;
+    // GPU timers
+    double appGPU = 0.0;
+};
 
-int mWidth = 1280;
-int mHeight = 720;
+//Application* gApplication = 0;
+SampleSelector gSampleSelector;
+GLuint gVertexArrayObject = 0;
+GLuint gGpuApplicationStart = 0;
+GLuint gGpuApplicationStop = 0;
+struct nk_context* gNkContext = 0;
+float gScaleFactor = 1.0f;
+
+static void error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-
-    struct nk_context *ctx;
-    struct nk_colorf bg;
-    struct nk_image img;
+    int clientWidth = 1280;
+    int clientHeight = 720;
 
     //
+    glfwSetErrorCallback(error_callback);
     glfwInit();
     const char* glsl_version = "#version 330";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -89,7 +74,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(mWidth, mHeight, "oglBoilerplate", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(clientWidth, clientHeight, "Game Animation Programming", nullptr, nullptr);
 
     if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -114,126 +99,50 @@ int main() {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
-    // shader
-#pragma region shader
-    GLuint Program;
-    {
-        std::string vertexCode;
-        std::string fragmentCode;
-        if (false)
-        {
-            // 1. Retrieve the vertex/fragment source code from filePath
+    // Enable Vsync
+    glfwSwapInterval(1);
+    int vsynch = 1;
+    std::cout << "Enabled vsynch" << std::endl;
 
-            std::ifstream vShaderFile;
-            std::ifstream fShaderFile;
-            // ensures ifstream objects can throw exceptions:
-            vShaderFile.exceptions (std::ifstream::badbit);
-            fShaderFile.exceptions (std::ifstream::badbit);
-            try
-            {
-                // Open files
-                vShaderFile.open("shaders/vert.vert");
-                fShaderFile.open("shaders/frag.frag");
-                std::stringstream vShaderStream, fShaderStream;
-                // Read file's buffer contents into streams
-                vShaderStream << vShaderFile.rdbuf();
-                fShaderStream << fShaderFile.rdbuf();
-                // close file handlers
-                vShaderFile.close();
-                fShaderFile.close();
-                // Convert stream into string
-                vertexCode = vShaderStream.str();
-                fragmentCode = fShaderStream.str();
-            }
-            catch (std::ifstream::failure e)
-            {
-                std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-                return EXIT_FAILURE;
-            }
-            const GLchar* vShaderCode = vertexCode.c_str();
-            const GLchar * fShaderCode = fragmentCode.c_str();
-        }
+    // GPU Timers
+    bool slowFrame = false;
+    bool firstRenderSample = true;
+    GLint timerResultAvailable = 0;
+    GLuint64 gpuStartTime = 0;
+    GLuint64 gpuStopTime = 0;
 
+    glGenQueries(1, &gGpuApplicationStart);
+    glGenQueries(1, &gGpuApplicationStop);
 
-        vertexCode = R"(
-#version 330 core
+    // Setup some OpenGL required state
+    glGenVertexArrays(1, &gVertexArrayObject);
+    glBindVertexArray(gVertexArrayObject);
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 color;
+    // CPU timings
+    LARGE_INTEGER timerFrequency;
+    LARGE_INTEGER timerStart;
+    LARGE_INTEGER timerStop;
+    LARGE_INTEGER frameStart;
+    LARGE_INTEGER frameStop;
+    LONGLONG timerDiff;
 
-out vec3 ourColor;
+    FrameTimer display;
+    FrameTimer accumulator;
+    memset(&display, 0, sizeof(FrameTimer));
+    memset(&accumulator, 0, sizeof(FrameTimer));
+    int frameCounter = 0;
 
-void main() {
-    gl_Position = vec4(position, 1.0f);
-    ourColor = color;
-}
-)";
-        fragmentCode = R"(
-#version 330 core
-
-in vec3 ourColor;
-
-out vec4 color;
-
-void main() {
-    color = vec4(ourColor, 1.0f);
-}
-)";
-
-
-        const GLchar* vShaderCode = vertexCode.c_str();
-        const GLchar * fShaderCode = fragmentCode.c_str();
-        // 2. Compile shaders
-        GLuint vertex, fragment;
-        GLint success;
-        GLchar infoLog[512];
-        // Vertex Shader
-        vertex = glCreateShader(GL_VERTEX_SHADER);
-//        std::cout << vShaderCode << std::endl;
-        glShaderSource(vertex, 1, &vShaderCode, NULL);
-        glCompileShader(vertex);
-        // Print compile errors if any
-        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-            return EXIT_FAILURE;
-        }
-        // Fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-//        std::cout << fShaderCode << std::endl;
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        // Print compile errors if any
-        glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
-            glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-            return EXIT_FAILURE;
-        }
-        // Shader Program
-        Program = glCreateProgram();
-        glAttachShader(Program, vertex);
-        glAttachShader(Program, fragment);
-        glLinkProgram(Program);
-        // Print linking errors if any
-        glGetProgramiv(Program, GL_LINK_STATUS, &success);
-        if (!success)
-        {
-            glGetProgramInfoLog(Program, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-            return EXIT_FAILURE;
-        }
-        // Delete the shaders as they're linked into our program now and no longer necessery
-        glDeleteShader(vertex);
-        glDeleteShader(fragment);
+    bool enableFrameTiming = true;
+    if (!QueryPerformanceFrequency(&timerFrequency)) {
+        std::cout << "WinMain: QueryPerformanceFrequency failed\n";
+        enableFrameTiming = false;
     }
-#pragma endregion shader
+
+    // Samples
+    gSampleSelector.Initialize();
 
 #pragma region nuklearInit
-    ctx = nk_glfw3_init(window, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+    gNkContext = nk_glfw3_init(window, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
     /* Load Fonts: if none of these are loaded a default font will be used  */
     /* Load Cursor: if you uncomment cursor loading please hide the cursor */
     {struct nk_font_atlas *atlas;
@@ -255,138 +164,246 @@ void main() {
     /*set_style(ctx, THEME_DARK);*/
 #endif
 
-    /* Create bindless texture.
-     * The index returned is not the opengl resource id.
-     * IF you need the GL resource id use: nk_glfw3_get_tex_ogl_id() */
-    {
-        int tex_index = 0;
-        enum {tex_width = 256, tex_height = 256};
-        char pixels[tex_width * tex_height * 4];
-        memset(pixels, 128, sizeof(pixels));
-        tex_index = nk_glfw3_create_texture(pixels, tex_width, tex_height);
-        img = nk_image_id(tex_index);
-    }
-
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
 #pragma endregion nuklearInit
 
+    // Get Display Frequency
+    int displayFrequency = glfwGetVideoMode(glfwGetPrimaryMonitor())->refreshRate;
+    double frameBudget = (1000.0 / (double)displayFrequency);
+    std::cout << "Display frequency: " << displayFrequency << "\n";
+    std::cout << "Frame budget: " << frameBudget << " milliseconds\n";
+
+    // Display helpers
+    nk_color defaultColor = gNkContext->style.text.color;
+    nk_color red = { 255, 0, 0, 255 };
+    nk_color orange = { 255, 165, 0, 255 };
+    char printBuffer[512];
+
     // Rendering Loop
+    double lastTick = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
+        // Win32 events
+        QueryPerformanceCounter(&timerStart);
+
         /* Input */
         glfwPollEvents();
         nk_glfw3_new_frame();
 
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.win32Events += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
 
-//        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
-//        glClear(GL_COLOR_BUFFER_BIT);
+        QueryPerformanceCounter(&frameStart);
 
-#pragma region nuklearIMGUI
-        /* GUI */
-        if (nk_begin(ctx, "Demo", nk_rect(50, 50, 230, 250),
-                     NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-                     NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-        {
-            enum {EASY, HARD};
-            static int op = EASY;
-            static int property = 20;
-            nk_layout_row_static(ctx, 30, 80, 1);
-            if (nk_button_label(ctx, "button"))
-                fprintf(stdout, "button pressed\n");
+        Application* application = gSampleSelector.GetCurrentSample();
 
-            nk_layout_row_dynamic(ctx, 30, 2);
-            if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
-            if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
+        // update
+        double thisTick = glfwGetTime();
+        float deltaTime = float(thisTick - lastTick);
+        lastTick = thisTick;
+        accumulator.deltaTime += deltaTime;
+        if (gSampleSelector.IsRunning() && application != 0) {
+            application->Update(deltaTime);
+        }
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.frameUpdate += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+        // Render
+        QueryPerformanceCounter(&timerStart);
+        glfwGetWindowSize(window, &clientWidth, &clientHeight);
+        glViewport(0, 0, clientWidth, clientHeight);
+        float aspect = (float)clientWidth / (float)clientHeight;
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glPointSize(5.0f * gScaleFactor);
+        glLineWidth(1.5f * gScaleFactor);
 
-            nk_layout_row_dynamic(ctx, 20, 1);
-            nk_label(ctx, "background:", NK_TEXT_LEFT);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(ctx),400))) {
-                nk_layout_row_dynamic(ctx, 120, 1);
-                bg = nk_color_picker(ctx, bg, NK_RGBA);
-                nk_layout_row_dynamic(ctx, 25, 1);
-                bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f,0.005f);
-                bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f,0.005f);
-                bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f,0.005f);
-                bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f,0.005f);
-                nk_combo_end(ctx);
+        glClearColor(0.5f, 0.6f, 0.7f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        if (gSampleSelector.IsRunning()) {
+            glBindVertexArray(gVertexArrayObject);
+
+            if (!firstRenderSample) { // Application GPU Timer
+                glGetQueryObjectiv(gGpuApplicationStop, GL_QUERY_RESULT, &timerResultAvailable);
+                while (!timerResultAvailable) {
+                    std::cout << "Waiting on app GPU timer!\n";
+                    glGetQueryObjectiv(gGpuApplicationStop, GL_QUERY_RESULT, &timerResultAvailable);
+                }
+                glGetQueryObjectui64v(gGpuApplicationStart, GL_QUERY_RESULT, &gpuStartTime);
+                glGetQueryObjectui64v(gGpuApplicationStop, GL_QUERY_RESULT, &gpuStopTime);
+                accumulator.appGPU += (double)(gpuStopTime - gpuStartTime) / 1000000.0;
+            }
+
+            glQueryCounter(gGpuApplicationStart, GL_TIMESTAMP);
+            if (application != 0) {
+                application->Render(aspect);
+            }
+            glQueryCounter(gGpuApplicationStop, GL_TIMESTAMP);
+        }
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.frameRender += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
+
+        // IMGUI Update
+        QueryPerformanceCounter(&timerStart);
+        if (gNkContext != 0 && gVertexArrayObject != 0) {
+            float imguiXPosition = ((float)clientWidth) - 205.0f;
+            if (nk_begin(gNkContext, "Display Stats", nk_rect(imguiXPosition, 5.0f, 200.0f, 65.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Display frequency: %d\0", displayFrequency);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                if (vsynch != 0) {
+                    nk_label(gNkContext, "VSynch: on", NK_TEXT_LEFT);
+                }
+                else {
+                    nk_label(gNkContext, "VSynch: off", NK_TEXT_LEFT);
+                }
+
+                sprintf(printBuffer, "Frame budget: %0.2f ms\0", frameBudget);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "High Level Timers", nk_rect(imguiXPosition, 75.0f, 200.0f, 45.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                if (slowFrame) {
+                    gNkContext->style.text.color = red;
+                }
+                else {
+                    gNkContext->style.text.color = defaultColor;
+                }
+
+                sprintf(printBuffer, "Frame Time: %0.5f ms\0", display.frameTime);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Delta Time: %0.5f ms\0", display.deltaTime);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                if (slowFrame) {
+                    gNkContext->style.text.color = defaultColor;
+                }
+            }
+            nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "GPU Timers", nk_rect(imguiXPosition, 125.0f, 200.0f, 30.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Game GPU: %0.5f ms\0", display.appGPU);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (nk_begin(gNkContext, "CPU Timers", nk_rect(imguiXPosition, 160.0f, 200.0f, 120.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) {
+                nk_layout_row_static(gNkContext, 15, 200, 1);
+
+                sprintf(printBuffer, "Win32 Events: %0.5f ms\0", display.win32Events);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Game Update: %0.5f ms\0", display.frameUpdate);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Game Render: %0.5f ms\0", display.frameRender);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "IMGUI logic: %0.5f ms\0", display.imguiLogic);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "IMGUI render: %0.5f ms\0", display.imguiRender);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+
+                sprintf(printBuffer, "Swap Buffers: %0.5f ms\0", display.swapBuffer);
+                nk_label(gNkContext, printBuffer, NK_TEXT_LEFT);
+            }
+            nk_end(gNkContext);
+
+            if (gSampleSelector.IsRunning()) {
+                if (application != 0) {
+                    application->ImGui(gNkContext);
+                }
+                gSampleSelector.ImGui(gNkContext, imguiXPosition);
             }
         }
-        nk_end(ctx);
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.imguiLogic += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
 
-        /* Bindless Texture */
-        if (nk_begin(ctx, "Texture", nk_rect(250, 150, 230, 250),
-                     NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-                     NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-        {
-            struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
-            struct nk_rect total_space = nk_window_get_content_region(ctx);
-            nk_draw_image(canvas, total_space, &img, nk_white);
+        // Imgui Render
+        QueryPerformanceCounter(&timerStart);
+        if (gNkContext != 0 && gVertexArrayObject != 0) {
+            /* IMPORTANT: `nk_glfw_render` modifies some global OpenGL state
+             * with blending, scissor, face culling, depth test and viewport and
+             * defaults everything back into a default state.
+             * Make sure to either a.) save and restore or b.) reset your own state after
+             * rendering the UI. */
+//            nk_glfw3_render(NK_ANTI_ALIASING_ON);
+            nk_glfw3_render(NK_ANTI_ALIASING_OFF);
         }
-        nk_end(ctx);
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.imguiRender += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
 
-        /* -------------- EXAMPLES ---------------- */
-#ifdef INCLUDE_CALCULATOR
-        calculator(ctx);
-#endif
-#ifdef INCLUDE_OVERVIEW
-        overview(ctx);
-#endif
-#ifdef INCLUDE_NODE_EDITOR
-        node_editor(ctx);
-#endif
-        /* ----------------------------------------- */
+        // Wait for GPU
+        QueryPerformanceCounter(&timerStart);
+        if (gVertexArrayObject != 0) {
+            glfwSwapBuffers(window);
+            if (vsynch != 0) {
+                glFinish();
+            }
+        }
+        QueryPerformanceCounter(&timerStop);
+        timerDiff = timerStop.QuadPart - timerStart.QuadPart;
+        accumulator.swapBuffer += (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
 
-        /* Draw */
-        glfwGetWindowSize(window, &width, &height);
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(bg.r, bg.g, bg.b, bg.a);
+        QueryPerformanceCounter(&frameStop);
+        timerDiff = frameStop.QuadPart - frameStart.QuadPart;
+        double frameTime = (double)timerDiff * 1000.0 / (double)timerFrequency.QuadPart;
+        accumulator.frameTime += frameTime;
 
-#pragma endregion nuklearIMGUI
+        // Profiling house keeping
+        firstRenderSample = false;
+        if (++frameCounter >= 60) {
+            frameCounter = 0;
 
-#pragma region maindraw
-        GLfloat vertices[] = {
-                // Positions         // Colors
-                 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Bottom Right
-                -0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // Bottom Left
-                 0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f,  // Top
-        };
+            display.win32Events = accumulator.win32Events / 60.0;
+            display.frameUpdate = accumulator.frameUpdate / 60.0;
+            display.frameRender = accumulator.frameRender / 60.0;
+            display.imguiLogic = accumulator.imguiLogic / 60.0;
+            display.imguiRender = accumulator.imguiRender / 60.0;
+            display.swapBuffer = accumulator.swapBuffer / 60.0;
+            display.frameTime = accumulator.frameTime / 60.0;
+            display.deltaTime = accumulator.deltaTime / 60.0f;
+            display.appGPU = accumulator.appGPU / 60.0;
 
-        glUseProgram(Program);
-
-        GLuint VAO, VBO;
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-        glEnableVertexAttribArray(1);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-#pragma endregion maindraw
-
-        /* IMPORTANT: `nk_glfw_render` modifies some global OpenGL state
-         * with blending, scissor, face culling, depth test and viewport and
-         * defaults everything back into a default state.
-         * Make sure to either a.) save and restore or b.) reset your own state after
-         * rendering the UI. */
-        nk_glfw3_render(NK_ANTI_ALIASING_ON);
-        glfwSwapBuffers(window);
+            memset(&accumulator, 0, sizeof(FrameTimer));
+            slowFrame = display.frameTime >= frameBudget;
+        }
     }
-    nk_glfw3_shutdown();
-    glfwTerminate();
+
+    // Shutdown
+    if (gSampleSelector.IsRunning()) {
+        gSampleSelector.Shutdown();
+    }
+    else {
+        std::cout << "Trying to close window after application has been shut down!\n";
+    }
+    if (gVertexArrayObject != 0) {
+        glDeleteQueries(1, &gGpuApplicationStart);
+        glDeleteQueries(1, &gGpuApplicationStop);
+
+        glBindVertexArray(0);
+        glDeleteVertexArrays(1, &gVertexArrayObject);
+        gVertexArrayObject = 0;
+
+        nk_glfw3_shutdown();
+
+        glfwTerminate();
+    }
+    else {
+        std::cout << "Got multiple destroy messages\n";
+    }
+
     return EXIT_SUCCESS;
 }
