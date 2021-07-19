@@ -17,6 +17,8 @@ include_directories(
         3rd_party/glad/include
         3rd_party/glfw/include
         3rd_party/Nuklear
+        3rd_party/stb
+        src
         )
 
 # LIBs
@@ -28,6 +30,16 @@ add_custom_target(copy-runtime-files ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Shaders ${CMAKE_BINARY_DIR}/Shaders
         )
 
-add_executable(SkelAnimation src/main.cpp ${GLAD_FILES})
+# Source
+## Math
+file(GLOB MATH_SRC src/Math/*.cpp)
+
+## RHI
+file(GLOB RHI_SRC src/RHI/*.cpp src/RHI/*/*/*.cpp)
+
+## Misc
+file(GLOB MISC_SRC src/Misc/*.cpp)
+
+add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC} ${RHI_SRC} ${MISC_SRC})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
 add_dependencies(SkelAnimation copy-runtime-files)
