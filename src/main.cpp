@@ -338,8 +338,8 @@ int main() {
              * defaults everything back into a default state.
              * Make sure to either a.) save and restore or b.) reset your own state after
              * rendering the UI. */
-//            nk_glfw3_render(NK_ANTI_ALIASING_ON);
-            nk_glfw3_render(NK_ANTI_ALIASING_OFF);
+            nk_glfw3_render(NK_ANTI_ALIASING_ON);
+//            nk_glfw3_render(NK_ANTI_ALIASING_OFF);
         }
         QueryPerformanceCounter(&timerStop);
         timerDiff = timerStop.QuadPart - timerStart.QuadPart;
