@@ -36,7 +36,7 @@ add_custom_target(copy-runtime-files ALL
 file(GLOB MATH_SRC src/Math/*.cpp)
 
 ## RHI
-file(GLOB RHI_SRC src/RHI/*.cpp src/RHI/*/*/*.cpp)
+file(GLOB RHI_SRC src/RHI/*.cpp src/RHI/*/*.cpp src/RHI/*/*/*.cpp)
 
 ## Misc
 file(GLOB MISC_SRC src/Misc/*.cpp src/Misc/*.c)
