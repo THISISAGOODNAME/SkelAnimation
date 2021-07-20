@@ -18,6 +18,7 @@ include_directories(
         3rd_party/glfw/include
         3rd_party/Nuklear
         3rd_party/stb
+        3rd_party/cgltf
         src
         )
 
@@ -38,11 +39,15 @@ file(GLOB MATH_SRC src/Math/*.cpp)
 file(GLOB RHI_SRC src/RHI/*.cpp src/RHI/*/*/*.cpp)
 
 ## Misc
-file(GLOB MISC_SRC src/Misc/*.cpp)
+file(GLOB MISC_SRC src/Misc/*.cpp src/Misc/*.c)
 
 ## Samples
 file(GLOB SAMPLES_SRC src/Samples/*.cpp)
 
-add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC} ${RHI_SRC} ${MISC_SRC} ${SAMPLES_SRC})
+## GLTF loader
+file(GLOB GLTF_LOADER_SRC src/GLTF/*.cpp)
+
+add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC}
+        ${RHI_SRC} ${MISC_SRC} ${SAMPLES_SRC} ${GLTF_LOADER_SRC})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
 add_dependencies(SkelAnimation copy-runtime-files)
