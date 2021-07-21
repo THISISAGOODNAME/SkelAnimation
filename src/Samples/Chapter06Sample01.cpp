@@ -1,4 +1,5 @@
 #include "Chapter06Sample01.h"
+#include "Camera.h"
 #include "Math/mat4.h"
 #include "Math/quat.h"
 #include "RHI/Uniform.h"
@@ -13,6 +14,8 @@ void Chapter06Sample01::Initialize() {
 	mVertexNormals = new Attribute<vec3>();
 	mVertexTexCoords = new Attribute<vec2>();
 	mIndexBuffer = new IndexBuffer();
+
+	mCamera = new Camera();
 
 	std::vector<vec3> positions;
 	positions.push_back(vec3(-1, -1, 0));
@@ -42,16 +45,18 @@ void Chapter06Sample01::Initialize() {
 	mIndexBuffer->Set(indices);
 }
 
-void Chapter06Sample01::Update(float inDeltaTime) {
+void Chapter06Sample01::Update(float inDeltaTime, const MouseState& inMouseState) {
 	mRotation += inDeltaTime * 45.0f;
 	while (mRotation > 360.0f) {
 		mRotation -= 360.0f;
 	}
+
+	mCamera->Update(inMouseState);
 }
 
 void Chapter06Sample01::Render(float inAspectRatio) {
-	mat4 projection = perspective(60.0f, inAspectRatio, 0.01f, 1000.0f);
-	mat4 view = lookAt(vec3(0, 0, -5), vec3(0, 0, 0), vec3(0, 1, 0));
+	mat4 projection = mCamera->Perspective(inAspectRatio);
+	mat4 view = mCamera->View();
 	mat4 model = quatToMat4(angleAxis(mRotation * QUAT_DEG2RAD, vec3(0, 0, 1)));
 
 	mShader->Bind();
@@ -86,4 +91,5 @@ void Chapter06Sample01::Shutdown() {
 	delete mVertexNormals;
 	delete mVertexTexCoords;
 	delete mIndexBuffer;
+	delete mCamera;
 }
