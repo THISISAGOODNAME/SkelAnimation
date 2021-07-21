@@ -5,6 +5,7 @@
 #include "Animation/Pose.h"
 #include "Animation/Clip.h"
 #include "Animation/Skeleton.h"
+#include "RHI/Rendering/Mesh.h"
 #include <string>
 
 cgltf_data* LoadGLTFFile(const char* path);
@@ -18,5 +19,8 @@ std::vector<Clip> LoadAnimationClips(cgltf_data* data);
 Pose LoadBindPose(cgltf_data* data);
 
 Skeleton LoadSkeleton(cgltf_data* data);
+
+std::vector<Mesh> LoadMeshes(cgltf_data* data);
+std::vector<Mesh> LoadStaticMeshes(cgltf_data* data);
 
 #endif

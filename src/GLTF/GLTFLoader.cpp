@@ -5,6 +5,7 @@
 #include "GLTFLoader.h"
 #include "Animation/Track.h"
 #include "Math/Transform.h"
+#include "RHI/Rendering/Mesh.h"
 #include <iostream>
 
 #pragma region GLTFHelpers
@@ -107,7 +108,128 @@ namespace GLTFHelpers
         }
     }
 
+    void MeshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute, cgltf_skin* skin, cgltf_node* nodes, unsigned int nodeCount) {
+        cgltf_attribute_type attribType = attribute.type;
+        cgltf_accessor& accessor = *attribute.data;
 
+        unsigned int componentCount = 0;
+        if (accessor.type == cgltf_type_vec2) {
+            componentCount = 2;
+        }
+        else if (accessor.type == cgltf_type_vec3) {
+            componentCount = 3;
+        }
+        else if (accessor.type == cgltf_type_vec4) {
+            componentCount = 4;
+        }
+        else {
+            std::cout << "Unknown data type\n";
+            return;
+        }
+
+        std::vector<float> values;
+        GetScalarValues(values, componentCount, accessor);
+        int acessorCount = accessor.count;
+
+        std::vector<vec3>& positions = outMesh.GetPosition();
+        std::vector<vec3>& normals = outMesh.GetNormal();
+        std::vector<vec2>& texCoords = outMesh.GetTexCoord();
+        std::vector<ivec4>& influences = outMesh.GetInfluences();
+        std::vector<vec4>& weights = outMesh.GetWeights();
+
+        for (unsigned int i = 0; i < acessorCount; ++i) {
+            int index = i * componentCount;
+            switch (attribType) {
+                case cgltf_attribute_type_position:
+                    positions.push_back(vec3(values[index + 0], values[index + 1], values[index + 2]));
+                    break;
+                case cgltf_attribute_type_normal:
+                {
+                    vec3 normal = vec3(values[index + 0], values[index + 1], values[index + 2]);
+                    if (lenSq(normal) < 0.000001f) {
+                        normal = vec3(0, 1, 0);
+                    }
+                    normals.push_back(normalized(normal));
+                }
+                    break;
+                case cgltf_attribute_type_texcoord:
+                    texCoords.push_back(vec2(values[index + 0], values[index + 1]));
+                    break;
+                case cgltf_attribute_type_joints:
+                {
+                    // These indices are skin relative. This function has no information about the
+                    // skin that is being parsed. Add +0.5f to round, since we can't read ints
+                    ivec4 joints(
+                            (int)(values[index + 0] + 0.5f),
+                            (int)(values[index + 1] + 0.5f),
+                            (int)(values[index + 2] + 0.5f),
+                            (int)(values[index + 3] + 0.5f)
+                    );
+
+
+                    joints.x = std::fmaxf(0, GetNodeIndex(skin->joints[joints.x], nodes, nodeCount));
+				    joints.y = std::fmaxf(0, GetNodeIndex(skin->joints[joints.y], nodes, nodeCount));
+				    joints.z = std::fmaxf(0, GetNodeIndex(skin->joints[joints.z], nodes, nodeCount));
+				    joints.w = std::fmaxf(0, GetNodeIndex(skin->joints[joints.w], nodes, nodeCount));
+
+				    influences.push_back(joints);
+                }
+                    break;
+                case cgltf_attribute_type_weights:
+                    weights.push_back(vec4(values[index + 0], values[index + 1], values[index + 2], values[index + 3]));
+                    break;
+            }
+        }
+    }
+
+    void StaticMeshFromAttribute(Mesh& outMesh, cgltf_attribute& attribute) {
+        cgltf_attribute_type attribType = attribute.type;
+        cgltf_accessor& accessor = *attribute.data;
+
+        int componentCount = 0;
+        if (accessor.type == cgltf_type_vec2) {
+            componentCount = 2;
+        }
+        else if (accessor.type == cgltf_type_vec3) {
+            componentCount = 3;
+        }
+        else if (accessor.type == cgltf_type_vec4) {
+            componentCount = 4;
+        }
+        else {
+            std::cout << "Unknown data type\n";
+            return;
+        }
+
+        std::vector<float> values;
+        GetScalarValues(values, componentCount, accessor);
+        int acessorCount = accessor.count;
+
+        std::vector<vec3>& positions = outMesh.GetPosition();
+        std::vector<vec3>& normals = outMesh.GetNormal();
+        std::vector<vec2>& texCoords = outMesh.GetTexCoord();
+
+        for (int i = 0; i < acessorCount; ++i) {
+            int index = i * componentCount;
+            switch (attribType) {
+                case cgltf_attribute_type_position:
+                    positions.push_back(vec3(values[index + 0], values[index + 1], values[index + 2]));
+                    break;
+                case cgltf_attribute_type_normal:
+                {
+                    vec3 normal = vec3(values[index + 0], values[index + 1], values[index + 2]);
+                    if (lenSq(normal) < 0.000001f) {
+                        normal = vec3(0, 1, 0);
+                    }
+                    normals.push_back(normalized(normal));
+                }
+                    break;
+                case cgltf_attribute_type_texcoord:
+                    texCoords.push_back(vec2(values[index + 0], values[index + 1]));
+                    break;
+            }
+        }
+    }
 }
 #pragma endregion GLTFHelpers
 
@@ -272,4 +394,86 @@ Skeleton LoadSkeleton(cgltf_data* data) {
             LoadBindPose(data),
             LoadJointNames(data)
     );
+}
+
+std::vector<Mesh> LoadMeshes(cgltf_data* data) {
+    std::vector<Mesh> result;
+    cgltf_node* nodes = data->nodes;
+    int nodeCount = data->nodes_count;
+
+    for (int i = 0; i < nodeCount; ++i) {
+        cgltf_node* node = &nodes[i];
+        if (node->mesh == 0 || node->skin == 0) {
+            continue;
+        }
+
+        int numPrims = node->mesh->primitives_count;
+        for (int j = 0; j < numPrims; ++j) {
+            result.push_back(Mesh());
+            Mesh& mesh = result[result.size() - 1];
+
+            cgltf_primitive* primitive = &node->mesh->primitives[j];
+
+            int numAttributes = primitive->attributes_count;
+            for (unsigned int k = 0; k < numAttributes; ++k) {
+                cgltf_attribute* attribute = &primitive->attributes[k];
+                GLTFHelpers::MeshFromAttribute(mesh, *attribute, node->skin, nodes, nodeCount);
+            }
+
+            if (primitive->indices != 0) {
+                int indexCount = primitive->indices->count;
+                std::vector<unsigned int>& indices = mesh.GetIndices();
+                indices.resize(indexCount);
+
+                for (int k = 0; k < indexCount; ++k) {
+                    indices[k] = cgltf_accessor_read_index(primitive->indices, k);
+                }
+            }
+
+            mesh.UpdateOpenGLBuffers();
+        }
+    }
+
+    return result;
+}
+
+std::vector<Mesh> LoadStaticMeshes(cgltf_data* data) {
+    std::vector<Mesh> result;
+    cgltf_node* nodes = data->nodes;
+    int nodeCount = data->nodes_count;
+
+    for (int i = 0; i < nodeCount; ++i) {
+        cgltf_node* node = &nodes[i];
+        if (node->mesh == 0) {
+            continue;
+        }
+
+        int numPrims = node->mesh->primitives_count;
+        for (int j = 0; j < numPrims; ++j) {
+            result.push_back(Mesh());
+            Mesh& mesh = result[result.size() - 1];
+
+            cgltf_primitive* primitive = &node->mesh->primitives[j];
+
+            int numAttributes = primitive->attributes_count;
+            for (int k = 0; k < numAttributes; ++k) {
+                cgltf_attribute* attribute = &primitive->attributes[k];
+                GLTFHelpers::StaticMeshFromAttribute(mesh, *attribute);
+            }
+
+            if (primitive->indices != 0) {
+                int indexCount = primitive->indices->count;
+                std::vector<unsigned int>& indices = mesh.GetIndices();
+                indices.resize(indexCount);
+
+                for (int k = 0; k < indexCount; ++k) {
+                    indices[k] = (unsigned int)cgltf_accessor_read_index(primitive->indices, k);
+                }
+            }
+
+            mesh.UpdateOpenGLBuffers();
+        }
+    }
+
+    return result;
 }
