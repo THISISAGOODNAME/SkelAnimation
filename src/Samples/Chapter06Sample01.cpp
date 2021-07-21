@@ -51,7 +51,7 @@ void Chapter06Sample01::Update(float inDeltaTime, const MouseState& inMouseState
 		mRotation -= 360.0f;
 	}
 
-	mCamera->update(inMouseState);
+	mCamera->Update(inMouseState);
 }
 
 void Chapter06Sample01::Render(float inAspectRatio) {

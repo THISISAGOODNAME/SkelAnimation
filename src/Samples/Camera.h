@@ -28,12 +28,12 @@ public:
 	inline vec3 GetTarget() const noexcept { return mRealTarget; }
 	inline vec3 GetUp() const noexcept { return mUp; }
 
-	inline void setTarget(const vec3& inTarget) noexcept { mRealTarget = inTarget; }
-	inline void setZNear(const float inZNear) noexcept { mZNear = inZNear; }
-	inline void setZFar(const float inZFar) noexcept { mZFar = inZFar; }
-	inline void setFov(const float inFov) noexcept { mFov = inFov; }
+	inline void SetTarget(const vec3& inTarget) noexcept { mRealTarget = inTarget; }
+	inline void SetZNear(const float inZNear) noexcept { mZNear = inZNear; }
+	inline void SetZFar(const float inZFar) noexcept { mZFar = inZFar; }
+	inline void SetFov(const float inFov) noexcept { mFov = inFov; }
 
-	void update(const MouseState& inMouseState);
+	void Update(const MouseState& inMouseState);
 	mat4 View();
 	mat4 Perspective(const float inAspectRatio);
 };

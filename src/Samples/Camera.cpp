@@ -117,7 +117,7 @@ void Camera::Zoom(const float delta)
     mTarget = mTarget + d;
 }
 
-void Camera::update(const MouseState& inMouseState)
+void Camera::Update(const MouseState& inMouseState)
 {
     if (inMouseState.Button == MouseButton::BUTTON_LEFT)
     {
