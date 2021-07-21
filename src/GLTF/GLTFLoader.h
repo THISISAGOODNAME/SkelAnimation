@@ -4,6 +4,7 @@
 #include "cgltf.h"
 #include "Animation/Pose.h"
 #include "Animation/Clip.h"
+#include "Animation/Skeleton.h"
 #include <string>
 
 cgltf_data* LoadGLTFFile(const char* path);
@@ -13,5 +14,9 @@ Pose LoadRestPose(cgltf_data* data);
 std::vector<std::string> LoadJointNames(cgltf_data* data);
 
 std::vector<Clip> LoadAnimationClips(cgltf_data* data);
+
+Pose LoadBindPose(cgltf_data* data);
+
+Skeleton LoadSkeleton(cgltf_data* data);
 
 #endif

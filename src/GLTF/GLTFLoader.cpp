@@ -191,7 +191,7 @@ std::vector<Clip> LoadAnimationClips(cgltf_data* data) {
     std::vector<Clip> result;
     result.resize(numClips);
 
-    for (unsigned int i = 0; i < numClips; ++i) {
+    for (int i = 0; i < numClips; ++i) {
         result[i].SetName(data->animations[i].name);
 
         int numChannels = data->animations[i].channels_count;
@@ -219,3 +219,57 @@ std::vector<Clip> LoadAnimationClips(cgltf_data* data) {
     return result;
 }
 
+Pose LoadBindPose(cgltf_data* data) {
+    // First, we find the bind pose of the model, but in world space
+    Pose restPose = LoadRestPose(data);
+    int numBones = restPose.Size();
+    std::vector<Transform> worldBindPose(numBones);
+    for (int i = 0; i < numBones; ++i) {
+        worldBindPose[i] = restPose.GetGlobalTransform(i);
+    }
+
+    // Next, we loop trough every skinned mesh in the gltf file
+    int numSkins = data->skins_count;
+    for (int i = 0; i < numSkins; ++i) {
+        cgltf_skin* skin = &(data->skins[i]);
+        std::vector<float> invBindAccessor;
+        GLTFHelpers::GetScalarValues(invBindAccessor, 16, *skin->inverse_bind_matrices);
+
+        // For each joint in the skin
+        int numJoints = skin->joints_count;
+        for (int j = 0; j < numJoints; ++j) {
+            // Read the ivnerse bind matrix of the joint
+            float* matrix = &(invBindAccessor[j * 16]);
+            mat4 invBindMatrix = mat4(matrix);
+            // invert, convert to transform
+            mat4 bindMatrix = inverse(invBindMatrix);
+            Transform bindTransform = mat4ToTransform(bindMatrix);
+            // Set that transform in the worldBindPose.
+            cgltf_node* jointNode = skin->joints[j];
+            int jointIndex = GLTFHelpers::GetNodeIndex(jointNode, data->nodes, numBones);
+            worldBindPose[jointIndex] = bindTransform;
+        } // end for each joint
+    } // end for each skin
+
+    // Convert the world bind pose to a regular bind pose
+    Pose bindPose = restPose;
+    for (int i = 0; i < numBones; ++i) {
+        Transform current = worldBindPose[i];
+        int p = bindPose.GetParent(i);
+        if (p >= 0) { // Bring into parent space
+            Transform parent = worldBindPose[p];
+            current = combine(inverse(parent), current);
+        }
+        bindPose.SetLocalTransform(i, current);
+    }
+
+    return bindPose;
+}
+
+Skeleton LoadSkeleton(cgltf_data* data) {
+    return Skeleton(
+            LoadRestPose(data),
+            LoadBindPose(data),
+            LoadJointNames(data)
+    );
+}
