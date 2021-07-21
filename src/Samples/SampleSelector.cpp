@@ -4,7 +4,7 @@
 
 #include "Chapter06Sample01.h"
 #include "Chapter08Sample01.h"
-//#include "Chapter09Sample01.h"
+#include "Chapter09Sample01.h"
 //#include "Chapter10Sample01.h"
 //#include "Chapter10Sample02.h"
 //#include "Chapter11Sample01.h"
@@ -50,10 +50,10 @@ void SampleSelector::ImGui(nk_context* context, float xPos) {
 			mCurrentSample = new Chapter08Sample01();
 			mCurrentSample->Initialize();
 		}
-//		if (nk_button_label(context, "Chapter 09, Sample 01")) {
-//			mCurrentSample = new Chapter09Sample01();
-//			mCurrentSample->Initialize();
-//		}
+		if (nk_button_label(context, "Chapter 09, Sample 01")) {
+			mCurrentSample = new Chapter09Sample01();
+			mCurrentSample->Initialize();
+		}
 //		if (nk_button_label(context, "Chapter 10, Sample 01")) {
 //			mCurrentSample = new Chapter10Sample01();
 //			mCurrentSample->Initialize();

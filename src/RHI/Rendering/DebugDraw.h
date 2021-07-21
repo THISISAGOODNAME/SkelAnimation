@@ -5,6 +5,7 @@
 #include "RHI/Attribute.h"
 #include "Math/vec3.h"
 #include "Math/mat4.h"
+#include "Animation/Pose.h"
 #include <vector>
 
 enum class DebugDrawMode {
@@ -32,6 +33,8 @@ public:
 
     void UpdateOpenGLBuffers();
     void Draw(DebugDrawMode mode, const vec3& color, const mat4& mvp);
+
+    void FromPose(Pose& pose);
 };
 
 #endif
