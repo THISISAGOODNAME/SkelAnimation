@@ -10,6 +10,7 @@
 #include "RHI/IndexBuffer.h"
 #include "RHI/Texture.h"
 
+class Camera;
 class Chapter06Sample01 : public Application {
 protected:
 	Shader* mShader;
@@ -18,10 +19,11 @@ protected:
 	Attribute<vec2>* mVertexTexCoords;
 	IndexBuffer* mIndexBuffer;
 	Texture* mDisplayTexture;
+	Camera* mCamera;
 	float mRotation;
 public:
 	void Initialize();
-	void Update(float inDeltaTime);
+	void Update(float inDeltaTime, const MouseState& inMouseState);
 	void Render(float inAspectRatio);
 	void Shutdown();
 };

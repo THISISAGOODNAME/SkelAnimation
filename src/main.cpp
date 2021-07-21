@@ -9,6 +9,7 @@
 
 #include "Samples/Application.h"
 #include "Samples/SampleSelector.h"
+#include "Samples/MouseState.h"
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -49,6 +50,7 @@ struct FrameTimer {
 
 //Application* gApplication = 0;
 SampleSelector gSampleSelector;
+MouseState gMouseState;
 GLuint gVertexArrayObject = 0;
 GLuint gGpuApplicationStart = 0;
 GLuint gGpuApplicationStop = 0;
@@ -58,6 +60,33 @@ float gScaleFactor = 1.0f;
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
+}
+
+static void process_events(GLFWwindow* window)
+{
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    gMouseState.SetPos(vec2(xpos, ypos));
+
+    int action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    if (action == GLFW_PRESS)
+    {
+        gMouseState.Button = MouseButton::BUTTON_LEFT;
+        return;
+    }
+    action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+    if (action == GLFW_PRESS)
+    {
+        gMouseState.Button = MouseButton::BUTTON_MIDDLE;
+        return;
+    }
+    action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    if (action == GLFW_PRESS)
+    {
+        gMouseState.Button = MouseButton::BUTTON_RIGHT;
+        return;
+    }
+    gMouseState.Button = MouseButton::BUTTON_NONE;
 }
 
 int main() {
@@ -187,6 +216,7 @@ int main() {
         /* Input */
         glfwPollEvents();
         nk_glfw3_new_frame();
+        process_events(window);
 
         QueryPerformanceCounter(&timerStop);
         timerDiff = timerStop.QuadPart - timerStart.QuadPart;
@@ -202,7 +232,7 @@ int main() {
         lastTick = thisTick;
         accumulator.deltaTime += deltaTime;
         if (gSampleSelector.IsRunning() && application != 0) {
-            application->Update(deltaTime);
+            application->Update(deltaTime, gMouseState);
         }
         QueryPerformanceCounter(&timerStop);
         timerDiff = timerStop.QuadPart - timerStart.QuadPart;
@@ -214,7 +244,7 @@ int main() {
         glViewport(0, 0, clientWidth, clientHeight);
         float aspect = (float)clientWidth / (float)clientHeight;
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
+        // glEnable(GL_CULL_FACE);
         glPointSize(5.0f * gScaleFactor);
         glLineWidth(1.5f * gScaleFactor);
 

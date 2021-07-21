@@ -10,6 +10,7 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #include "nuklear.h"
 
+struct MouseState;
 class Application {
 private:
 	Application(const Application&);
@@ -19,7 +20,7 @@ public:
 	inline virtual ~Application() { }
 
 	inline virtual void Initialize() {}
-	inline virtual void Update(float inDeltaTime) { }
+	inline virtual void Update(float inDeltaTime, const MouseState& inMouseState) { }
 	inline virtual void Render(float inAspectRatio) { }
 	inline virtual void ImGui(nk_context* inContext) { }
 	inline virtual void Shutdown() { }
