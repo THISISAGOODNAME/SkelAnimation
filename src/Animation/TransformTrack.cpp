@@ -1,5 +1,7 @@
 #include "TransformTrack.h"
 
+#pragma region TransformTrack
+
 template TTransformTrack<VectorTrack, QuaternionTrack>;
 
 template <typename VTRACK, typename QTRACK>
@@ -106,3 +108,22 @@ Transform TTransformTrack<VTRACK, QTRACK>::Sample(const Transform& ref,
     }
     return result;
 }
+
+#pragma endregion TransformTrack
+
+#pragma region FastTransformTrack
+
+template TTransformTrack<FastVectorTrack, FastQuaternionTrack>;
+
+FastTransformTrack OptimizeTransformTrack(TransformTrack& input) {
+    FastTransformTrack result;
+
+    result.SetId(input.GetId());
+    result.GetPositionTrack() = OptimizeTrack<vec3, 3>(input.GetPositionTrack());
+    result.GetRotationTrack() = OptimizeTrack<quat, 4>(input.GetRotationTrack());
+    result.GetScaleTrack() = OptimizeTrack<vec3, 3>(input.GetScaleTrack());
+
+    return result;
+}
+
+#pragma endregion FastTransformTrack

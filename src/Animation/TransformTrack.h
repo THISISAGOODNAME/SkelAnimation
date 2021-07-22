@@ -26,4 +26,8 @@ public:
 
 typedef TTransformTrack<VectorTrack, QuaternionTrack> TransformTrack;
 
+typedef TTransformTrack<FastVectorTrack, FastQuaternionTrack> FastTransformTrack;
+
+FastTransformTrack OptimizeTransformTrack(TransformTrack& input);
+
 #endif
