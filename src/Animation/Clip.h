@@ -9,7 +9,7 @@
 template <typename TRACK>
 class TClip {
 protected:
-    std::vector<TransformTrack> mTracks;
+    std::vector<TRACK> mTracks;
     std::string mName;
     float mStartTime;
     float mEndTime;
@@ -40,5 +40,9 @@ public:
 };
 
 typedef TClip<TransformTrack> Clip;
+
+typedef TClip<FastTransformTrack> FastClip;
+
+FastClip OptimizeClip(Clip& input);
 
 #endif

@@ -1,5 +1,7 @@
 #include "Clip.h"
 
+#pragma region Clip
+
 template TClip<TransformTrack>;
 
 template <typename TRACK>
@@ -139,3 +141,26 @@ template <typename TRACK>
 void TClip<TRACK>::SetLooping(bool inLooping) {
     mLooping = inLooping;
 }
+
+#pragma endregion Clip
+
+#pragma region FastClip
+
+template TClip<FastTransformTrack>;
+
+FastClip OptimizeClip(Clip& input) {
+    FastClip result;
+
+    result.SetName(input.GetName());
+    result.SetLooping(input.GetLooping());
+    int size = input.Size();
+    for (int i = 0; i < size; ++i) {
+        unsigned int joint = input.GetIdAtIndex(i);
+        result[joint] = OptimizeTransformTrack(input[joint]);
+    }
+    result.RecalculateDuration();
+
+    return result;
+}
+
+#pragma endregion FastClip
