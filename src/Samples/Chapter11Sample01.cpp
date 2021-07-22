@@ -65,7 +65,7 @@ void Chapter11Sample01::Update(float deltaTime) {
 
     if (mSkinType == SkinningType::CPU) {
         for (int i = 0, size = mMeshes.size(); i < size; ++i) {
-            mMeshes[i].CPUSkin(mPosePalette);
+            mMeshes[i].CPUSkin(mPosePalette); // Much faster
         }
     }
 }
