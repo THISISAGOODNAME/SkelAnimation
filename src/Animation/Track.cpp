@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#pragma region Track
+
 template Track<float, 1>;
 template Track<vec3, 3>;
 template Track<quat, 4>;
@@ -259,3 +261,98 @@ T Track<T, N>::SampleCubic(float time, bool looping) {
 
     return Hermite(t, point1, slope1, point2, slope2);
 }
+
+#pragma endregion Track
+
+#pragma region FastTrack
+
+template FastTrack<float, 1>;
+template FastTrack<vec3, 3>;
+template FastTrack<quat, 4>;
+
+template<typename T, int N>
+void FastTrack<T, N>::UpdateIndexLookupTable() {
+    int numFrames = this->mFrames.size();
+    if (numFrames <= 1) {
+        return;
+    }
+
+    float duration = this->GetEndTime() - this->GetStartTime();
+//    unsigned int numSamples = 60 + (unsigned int)(duration * 60.0f); // when duration < 0
+    int numSamples = (int)(duration * 60.0f); // 60 samples per second
+    mSampledFrames.resize(numSamples);
+    for (unsigned int i = 0; i < numSamples; ++i) {
+        float t = (float)i / (float)(numSamples - 1);
+        float time = t * duration + this->GetStartTime();
+
+        int frameIndex = 0;
+        for (int j = numFrames - 1; j >= 0; --j) {
+            if (time >= this->mFrames[j].mTime) {
+                frameIndex = j;
+                if (frameIndex >= numFrames - 2) {
+                    frameIndex = numFrames - 2;
+                }
+                break;
+            }
+        }
+        mSampledFrames[i] = frameIndex;
+    }
+}
+
+template<typename T, int N>
+int FastTrack<T, N>::FrameIndex(float time, bool looping) {
+    std::vector<Frame<N>>& frames = this->mFrames;
+
+    int size = frames.size();
+    if (size <= 1) { return -1; }
+
+    if (looping) {
+        float startTime = frames[0].mTime;
+        float endTime = frames[size - 1].mTime;
+        float duration = endTime - startTime;
+        time = fmodf(time - startTime, duration);
+        if (time < 0.0f) {
+            time += duration;
+        }
+        time = time + startTime;
+    }
+    else {
+        if (time <= frames[0].mTime) {
+            return 0;
+        }
+        if (time >= frames[size - 2].mTime) {
+            return (int)size - 2;
+        }
+    }
+    float duration = this->GetEndTime() - this->GetStartTime();
+    //    unsigned int numSamples = 60 + (unsigned int)(duration * 60.0f); // when duration < 0
+    int numSamples = (int)(duration * 60.0f); // 60 samples per second
+    float t = time / duration;
+
+    int index = (int)(t * (float)numSamples);
+    if (index >= mSampledFrames.size()) {
+        return -1;
+    }
+    return (int)mSampledFrames[index];
+}
+
+template FastTrack<float, 1> OptimizeTrack(Track<float, 1>& input);
+template FastTrack<vec3, 3> OptimizeTrack(Track<vec3, 3>& input);
+template FastTrack<quat, 4> OptimizeTrack(Track<quat, 4>& input);
+
+template<typename T, int N>
+FastTrack<T, N> OptimizeTrack(Track<T, N>& input) {
+    FastTrack<T, N> result;
+
+    result.SetInterpolation(input.GetInterpolation());
+    unsigned int size = input.Size();
+    result.Resize(size);
+    for (unsigned int i = 0; i < size; ++i) {
+        result[i] = input[i];
+    } // NO Copy Constructor
+    result.UpdateIndexLookupTable();
+
+    return result;
+}
+
+#pragma endregion FastTrack
