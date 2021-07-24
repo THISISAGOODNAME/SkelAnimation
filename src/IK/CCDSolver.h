@@ -4,6 +4,7 @@
 #include "Math/Transform.h"
 #include <vector>
 
+// CCD - Cyclic Coordinate Descent
 class CCDSolver {
 protected:
     std::vector<Transform> mIKChain;
