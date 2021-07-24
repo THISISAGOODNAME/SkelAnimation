@@ -7,6 +7,7 @@
 #include "Math/mat4.h"
 #include "Animation/Pose.h"
 #include "IK/CCDSolver.h"
+#include "IK/FABRIKSolver.h"
 #include <vector>
 
 enum class DebugDrawMode {
@@ -39,6 +40,9 @@ public:
 
     void LinesFromIKSolver(CCDSolver& solver);
     void PointsFromIKSolver(CCDSolver& solver);
+
+    void LinesFromIKSolver(FABRIKSolver& solver);
+    void PointsFromIKSolver(FABRIKSolver& solver);
 };
 
 #endif
