@@ -42,3 +42,13 @@ std::vector<std::string>& Skeleton::GetJointNames() {
 std::string& Skeleton::GetJointName(unsigned int index) {
     return mJointNames[index];
 }
+
+void Skeleton::GetInvBindPose(std::vector<DualQuaternion>& outInvBndPose) {
+    unsigned int size = mBindPose.Size();
+    outInvBndPose.resize(size);
+
+    for (unsigned int i = 0; i < size; ++i) {
+        DualQuaternion world = mBindPose.GetGlobalDualQuaternion(i);
+        outInvBndPose[i] = conjugate(world);
+    }
+}

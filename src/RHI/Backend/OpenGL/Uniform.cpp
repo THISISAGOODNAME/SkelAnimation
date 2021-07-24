@@ -46,3 +46,12 @@ template <typename T>
 void Uniform<T>::Set(unsigned int slot, std::vector<T>& value) {
 	Set(slot, &value[0], (unsigned int)value.size());
 }
+
+#include "Math/DualQuaternion.h"
+template Uniform<DualQuaternion>;
+
+template<>
+void Uniform<DualQuaternion>::Set(unsigned int slot, DualQuaternion* inputArray, unsigned int arrayLength) {
+    glUniformMatrix2x4fv(slot, (GLsizei)arrayLength, false, inputArray[0].v);
+}
+

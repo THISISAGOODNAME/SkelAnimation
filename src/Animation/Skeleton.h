@@ -3,6 +3,7 @@
 
 #include "Animation/Pose.h"
 #include "Math/mat4.h"
+#include "Math/DualQuaternion.h"
 #include <vector>
 #include <string>
 
@@ -28,6 +29,8 @@ public:
 
     std::vector<std::string>& GetJointNames();
     std::string& GetJointName(unsigned int index);
+
+    void GetInvBindPose(std::vector<DualQuaternion>& outInvBndPose);
 };
 
 #endif

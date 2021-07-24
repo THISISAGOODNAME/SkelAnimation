@@ -138,3 +138,23 @@ bool Pose::operator==(const Pose& other) {
 bool Pose::operator!=(const Pose& other) {
     return !(*this == other);
 }
+
+DualQuaternion Pose::GetGlobalDualQuaternion(unsigned int index) {
+    DualQuaternion result = transformToDualQuat(mJoints[index]);
+    for (int p = mParents[index]; p >= 0; p = mParents[p]) {
+        DualQuaternion parent = transformToDualQuat(mJoints[p]);
+        result = result * parent; // Remember, multiplication is in reverse!
+    }
+    return result;
+}
+
+void Pose::GetDualQuaternionPalette(std::vector<DualQuaternion>& out) {
+    unsigned int size = Size();
+    if (out.size() != size) {
+        out.resize(size);
+    }
+
+    for (unsigned int i = 0; i < size; ++i) {
+        out[i] = GetGlobalDualQuaternion(i);
+    }
+}

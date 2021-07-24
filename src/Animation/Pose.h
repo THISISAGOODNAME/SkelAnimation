@@ -2,6 +2,7 @@
 #define _H_POSE_
 
 #include "Math/Transform.h"
+#include "Math/DualQuaternion.h"
 #include <vector>
 
 class Pose {
@@ -31,6 +32,9 @@ public:
 
     bool operator==(const Pose& other);
     bool operator!=(const Pose& other);
+
+    void GetDualQuaternionPalette(std::vector<DualQuaternion>& out);
+    DualQuaternion GetGlobalDualQuaternion(unsigned int index);
 };
 
 #endif
