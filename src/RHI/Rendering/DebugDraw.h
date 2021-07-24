@@ -6,6 +6,7 @@
 #include "Math/vec3.h"
 #include "Math/mat4.h"
 #include "Animation/Pose.h"
+#include "IK/CCDSolver.h"
 #include <vector>
 
 enum class DebugDrawMode {
@@ -35,6 +36,9 @@ public:
     void Draw(DebugDrawMode mode, const vec3& color, const mat4& mvp);
 
     void FromPose(Pose& pose);
+
+    void LinesFromIKSolver(CCDSolver& solver);
+    void PointsFromIKSolver(CCDSolver& solver);
 };
 
 #endif

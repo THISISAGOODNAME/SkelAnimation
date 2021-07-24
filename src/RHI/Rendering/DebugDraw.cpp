@@ -120,3 +120,24 @@ void DebugDraw::FromPose(Pose& pose) {
         mPoints.push_back(pose.GetGlobalTransform(pose.GetParent(i)).position);
     }
 }
+
+void DebugDraw::LinesFromIKSolver(CCDSolver& solver) {
+    if (solver.Size() < 2) { return; }
+    unsigned int requiredVerts = (solver.Size() - 1) * 2;
+    mPoints.resize(requiredVerts);
+
+    unsigned int index = 0;
+    for (unsigned int i = 0, size = solver.Size(); i < size - 1; ++i) {
+        mPoints[index++] = solver.GetGlobalTransform(i).position;
+        mPoints[index++] = solver.GetGlobalTransform(i + 1).position;
+    }
+}
+
+void DebugDraw::PointsFromIKSolver(CCDSolver& solver) {
+    unsigned int requiredVerts = solver.Size();
+    mPoints.resize(requiredVerts);
+
+    for (unsigned int i = 0, size = solver.Size(); i < size; ++i) {
+        mPoints[i] = solver.GetGlobalTransform(i).position;
+    }
+}
