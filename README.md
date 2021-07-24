@@ -2,6 +2,23 @@
 
 An implement for ***C++ Game Animation Programming***
 
+# Features
+
+- Mesh Skinning
+  - [x] CPU Skinning
+  - [x] GPU Skinning
+- Blending
+  - [x] Animation Blending
+  - [x] Animation Crossfading
+  - [x] Additive Blending
+- IK
+  - [x] CCD IK
+  - [x] FABR IK
+  - [x] Foot IK demo
+- Others
+  - [x] DQS
+  - [x] GPU Skinning Instancing
+
 # 3rd Party Open Source Libraries
 
 - [cgltf](https://github.com/jkuhlmann/cgltf)
