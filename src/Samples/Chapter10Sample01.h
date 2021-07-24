@@ -1,7 +1,7 @@
 #ifndef _H_CHAPTER10SAMPLE01_
 #define _H_CHAPTER10SAMPLE01_
 
-#include "Application.h"
+#include "Samples/Framework/Application.h"
 #include "RHI/Rendering/DebugDraw.h"
 #include <vector>
 #include "Animation/Skeleton.h"

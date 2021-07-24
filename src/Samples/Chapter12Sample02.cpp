@@ -152,7 +152,7 @@ void Chapter12Sample02::Shutdown() {
 }
 
 void Chapter12Sample02::ImGui(nk_context* ctx) {
-	nk_begin(ctx, "Chapter 9, Sample 1", nk_rect(5.0f, 5.0f, 300.0f, 220.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR);
+	nk_begin(ctx, "Chapter 12, Sample 02", nk_rect(5.0f, 5.0f, 300.0f, 220.0f), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR);
 
 	static const float layout[] = { 90, 185 };
 	nk_layout_row(ctx, NK_STATIC, 25, 2, layout);

@@ -1,7 +1,7 @@
 #ifndef _H_CHAPTER10SAMPLE02_
 #define _H_CHAPTER10SAMPLE02_
 
-#include "Application.h"
+#include "Samples/Framework/Application.h"
 #include "RHI/Rendering/DebugDraw.h"
 #include "RHI/Rendering/Mesh.h"
 #include "RHI/Texture.h"

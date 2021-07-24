@@ -1,7 +1,7 @@
 #ifndef _H_CHAPTER15SAMPLE01_
 #define _H_CHAPTER15SAMPLE01_
 
-#include "Application.h"
+#include "Samples/Framework/Application.h"
 #include "RHI/Rendering/DebugDraw.h"
 #include "RHI/Rendering/Mesh.h"
 #include "RHI/Texture.h"
@@ -29,7 +29,6 @@ public:
 	void Update(float deltaTime);
 	void Render(float inAspectRatio);
 	void Shutdown();
-	void ImGui(nk_context* inContext);
 };
 
 #endif

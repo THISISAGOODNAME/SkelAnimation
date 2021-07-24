@@ -94,7 +94,3 @@ void Chapter15Sample01::Shutdown() {
 	mTextures.clear();
 	mCrowds.clear();
 }
-
-void Chapter15Sample01::ImGui(nk_context* ctx) {
-
-}

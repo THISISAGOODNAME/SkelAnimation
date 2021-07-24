@@ -1,8 +1,8 @@
 #ifndef _H_CHAPTER12SAMPLE01_
 #define _H_CHAPTER12SAMPLE01_
 
-#include "Application.h"
-#include "SamplePoseInstance.h"
+#include "Samples/Framework/Application.h"
+#include "Samples/Framework/SamplePoseInstance.h"
 #include "RHI/Rendering/DebugDraw.h"
 #include "RHI/Rendering/Mesh.h"
 #include "RHI/Texture.h"

@@ -1,7 +1,7 @@
 #ifndef _H_SAMPLE_SELECTOR_
 #define _H_SAMPLE_SELECTOR_
 
-#include "Application.h"
+#include "Samples/Framework/Application.h"
 #include <vector>
 
 class SampleSelector {

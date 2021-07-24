@@ -7,8 +7,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include "Samples/Application.h"
-#include "Samples/SampleSelector.h"
+#include "Samples/Framework/Application.h"
+#include "Samples/Framework/SampleSelector.h"
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
