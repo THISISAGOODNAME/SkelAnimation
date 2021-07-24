@@ -17,7 +17,7 @@
 #include "Chapter13Sample02.h"
 #include "Chapter13Sample03.h"
 #include "Chapter14Sample01.h"
-//#include "Chapter15Sample01.h"
+#include "Chapter15Sample01.h"
 
 SampleSelector::SampleSelector() {
 	mCurrentSample = 0;
@@ -102,10 +102,10 @@ void SampleSelector::ImGui(nk_context* context, float xPos) {
 			mCurrentSample = new Chapter14Sample01();
 			mCurrentSample->Initialize();
 		}
-//		if (nk_button_label(context, "Chapter 15, Sample 01")) {
-//			mCurrentSample = new Chapter15Sample01();
-//			mCurrentSample->Initialize();
-//		}
+		if (nk_button_label(context, "Chapter 15, Sample 01")) {
+			mCurrentSample = new Chapter15Sample01();
+			mCurrentSample->Initialize();
+		}
 
 		nk_end(context);
 	}

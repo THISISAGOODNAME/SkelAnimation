@@ -56,8 +56,11 @@ file(GLOB ANIME_BLENDING_SRC src/AnimationBlending/*.cpp)
 ## IK
 file(GLOB IK_SRC src/IK/*.cpp)
 
+## Crowds
+file(GLOB CROWDS_SRC src/Crowds/*.cpp)
+
 add_executable(SkelAnimation src/main.cpp ${GLAD_FILES} ${MATH_SRC}
         ${RHI_SRC} ${MISC_SRC} ${SAMPLES_SRC} ${GLTF_LOADER_SRC}
-        ${ANIME_SRC} ${ANIME_BLENDING_SRC} ${IK_SRC})
+        ${ANIME_SRC} ${ANIME_BLENDING_SRC} ${IK_SRC} ${CROWDS_SRC})
 target_link_libraries(SkelAnimation ${COMMON_LIBS})
 add_dependencies(SkelAnimation copy-runtime-files)
