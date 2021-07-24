@@ -1,6 +1,6 @@
 # SkelAnimation
 
-An implement for ***C++ Game Animation Programming***
+An implement for [***C++ Game Animation Programming***](https://www.packtpub.com/product/hands-on-c-game-animation-programming/9781800208087)
 
 # Features
 
