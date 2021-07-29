@@ -1,5 +1,9 @@
 # SkelAnimation
 
+[![cmake-img]][cmake-url]
+[![License][license-img]][license-url]
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/THISISAGOODNAME/SkelAnimation/main?style=flat-square)
+
 An implement for [***C++ Game Animation Programming***](https://www.packtpub.com/product/hands-on-c-game-animation-programming/9781800208087)
 
 # Features
@@ -33,3 +37,9 @@ An implement for [***C++ Game Animation Programming***](https://www.packtpub.com
     - http://quaternius.com/assets.html
 - MIT licensed assets from GDQuest
     - https://github.com/GDQuest/godot-3d-mannequin
+
+[cmake-img]: https://img.shields.io/badge/cmake-3.17-1f9948.svg?style=flat-square
+[cmake-url]: https://cmake.org/
+[license-img]: https://img.shields.io/:license-mit-blue.svg?style=flat-square
+[license-url]: https://opensource.org/licenses/MIT
+
