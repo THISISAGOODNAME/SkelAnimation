@@ -24,16 +24,16 @@ jobs:
             cc: cl.exe
 #            vcpkgCommitId: '30124253eecff36bc90f73341edbfb4f845e2a1e'
 #            vcpkgPackages: 'sqlite3'
-          - os: ubuntu-latest
-            triplet: x64-linux
-            cxx: clang++
-            cc: clang
+#          - os: ubuntu-latest
+#            triplet: x64-linux
+#            cxx: clang++
+#            cc: clang
 #            vcpkgCommitId: '30124253eecff36bc90f73341edbfb4f845e2a1e'
 #            vcpkgPackages: 'sqlite3'
-          - os: macos-latest
-            triplet: x64-osx
-            cxx: clang++
-            cc: clang
+#          - os: macos-latest
+#            triplet: x64-osx
+#            cxx: clang++
+#            cc: clang
 #            vcpkgCommitId: '30124253eecff36bc90f73341edbfb4f845e2a1e'
 #            vcpkgPackages: 'sqlite3'
 

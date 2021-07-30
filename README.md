@@ -3,7 +3,7 @@
 [![cmake-img]][cmake-url]
 [![License][license-img]][license-url]
 [![GitHub last commit (branch)][last-commit-img]][last-commit-url]
-[![example workflow](https://github.com/THISISAGOODNAME/SkelAnimation/actions/workflows/build-cpp.yml/badge.svg?style=flat-square)](https://github.com/THISISAGOODNAME/SkelAnimation/actions)
+[![example workflow][ci-img]][ci-url]
 
 An implement for [***C++ Game Animation Programming***](https://www.packtpub.com/product/hands-on-c-game-animation-programming/9781800208087)
 
@@ -45,3 +45,5 @@ An implement for [***C++ Game Animation Programming***](https://www.packtpub.com
 [license-url]: https://opensource.org/licenses/MIT
 [last-commit-img]: https://img.shields.io/github/last-commit/THISISAGOODNAME/SkelAnimation/main?style=flat-square
 [last-commit-url]: https://github.com/THISISAGOODNAME/SkelAnimation
+[ci-img]: https://img.shields.io/github/workflow/status/THISISAGOODNAME/SkelAnimation/Build%20with%20CMake?style=flat-square&logo=github
+[ci-url]: https://github.com/THISISAGOODNAME/SkelAnimation/actions
