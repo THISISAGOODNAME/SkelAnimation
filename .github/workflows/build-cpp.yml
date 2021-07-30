@@ -46,7 +46,7 @@ jobs:
 
       - name: Set Compiler Environment
 #        if: "!endsWith(matrix.name, 'hunter')"
-        uses: lukka/set-shell-env@latest
+        uses: lukka/set-shell-env@v1
         with:
           CXX: ${{ matrix.cxx }}
           CC: ${{ matrix.cc }}
