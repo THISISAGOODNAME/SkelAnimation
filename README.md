@@ -4,6 +4,7 @@
 [![License][license-img]][license-url]
 [![GitHub last commit (branch)][last-commit-img]][last-commit-url]
 [![example workflow][ci-img]][ci-url]
+[![GitHub Repo stars][star-img]][star-url]
 
 An implement for [***C++ Game Animation Programming***](https://www.packtpub.com/product/hands-on-c-game-animation-programming/9781800208087)
 
@@ -39,11 +40,13 @@ An implement for [***C++ Game Animation Programming***](https://www.packtpub.com
 - MIT licensed assets from GDQuest
     - https://github.com/GDQuest/godot-3d-mannequin
 
-[cmake-img]: https://img.shields.io/badge/cmake-3.17-1f9948.svg?style=flat-square
+[cmake-img]: https://img.shields.io/badge/cmake-3.17-1f9948.svg?style=flat-square&logo=cmake
 [cmake-url]: https://cmake.org/
-[license-img]: https://img.shields.io/:license-mit-blue.svg?style=flat-square
+[license-img]: https://img.shields.io/:license-mit-blue.svg?style=flat-square&logo=opensourceinitiative
 [license-url]: https://opensource.org/licenses/MIT
-[last-commit-img]: https://img.shields.io/github/last-commit/THISISAGOODNAME/SkelAnimation/main?style=flat-square
+[last-commit-img]: https://img.shields.io/github/last-commit/THISISAGOODNAME/SkelAnimation/main?style=flat-square&logo=git
 [last-commit-url]: https://github.com/THISISAGOODNAME/SkelAnimation
 [ci-img]: https://img.shields.io/github/workflow/status/THISISAGOODNAME/SkelAnimation/Build%20with%20CMake?style=flat-square&logo=github
 [ci-url]: https://github.com/THISISAGOODNAME/SkelAnimation/actions
+[star-img]: https://img.shields.io/github/stars/THISISAGOODNAME/SkelAnimation?logo=github&style=flat-square
+[star-url]: .
